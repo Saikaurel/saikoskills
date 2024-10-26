@@ -1,237 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hexagonal Grid Animation 3D</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://unpkg.com/d3-hexbin@0.2.2/build/d3-hexbin.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+  <title>Spider Chart - Compétences Informatiques</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.css">
   <style>
+    /* Styles généraux */
     body {
-      background-color: black;
-      margin: 0;
+      font-family: 'Press Start 2P', cursive;
+      background-color: #000;
+      color: #00eaff;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
-      overflow: hidden;
-      perspective: 1000px;
     }
-
-    #hex-grid {
-      transform-style: preserve-3d;
-    }
-
-    .hexagon {
-      stroke: #00FFFF;
-      stroke-width: 3;
-      fill: transparent; /* Make the hexagons transparent */
-      transition: stroke-width 0.3s, stroke 0.8s;
-    }
-
-    .hex-text {
-      fill: #00FFFF;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 14px;
-      text-anchor: middle;
-      dominant-baseline: middle;
-      pointer-events: none;
-    }
-    .arc-electric {
-      stroke: #00FFFF;
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.8;
-    }
-
-    .avatar-container {
-      display: flex;
-      justify-content: space-around;
+    .chart-container {
       width: 600px;
-      margin-top: 30px;
+      height: 600px;
+      margin: 20px;
     }
-
+    .avatars-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
     .avatar {
+      width: 150px;
+      height: 150px;
+      background: #222;
+      border: 2px solid #00eaff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s ease;
+    }
+    .avatar img {
       width: 100px;
       height: 100px;
-      background-color: #00FFFF;
-      border: 3px solid #00FFFF;
-      box-shadow: 0 0 15px #00FFFF;
-      transition: transform 0.3s, box-shadow 0.3s;
-      background-image: url('https://placekitten.com/100/100');
-      background-size: cover;
+      border-radius: 50%;
     }
-
     .avatar:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 25px #00FFFF;
+      border-color: #00ffea;
+      box-shadow: 0 0 50px #00ffea;
     }
   </style>
 </head>
 <body>
-  <svg id="hex-grid" width="1024" height="768"></svg>
-  <div class="avatar-container">
-    <div class="avatar"></div>
-    <div class="avatar"></div>
-    <div class="avatar"></div>
-    <div class="avatar"></div>
-    <div class="avatar"></div>
+
+  <h1>Spider Chart - Compétences Informatiques</h1>
+
+  <!-- Spider chart container -->
+  <div class="chart-container">
+    <canvas id="spiderChart"></canvas>
   </div>
 
+  <!-- Avatars container -->
+  <div class="avatars-container" id="avatarsContainer"></div>
+
+  <!-- Import des bibliothèques JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
   <script>
-    const width = 1024;
-    const height = 768;
-    const hexRadius = 60;
-    const keywords = ["AGILITÉ", "DEV FRONT", "DEV BACK", "CLOUD", "DEVOPS", "SÉCURITÉ", "CRAFT", "MOBILE", "ARCHITECTURE"];
+    // Liste de compétences
+    const skills = ["Cloud", "DevOps", "Dev Back", "Dev Front", "Mobile", "Agilité", "Architecture", "Craft", "Sécurité"];
 
-    const svg = d3.select("#hex-grid")
-      .attr("viewBox", `0 0 ${width} ${height}`);
+    // Génère des données de compétences aléatoires pour chaque personne
+    const people = Array.from({ length: 10 }, (_, i) => ({
+      name: `Personne ${i + 1}`,
+      avatar: "https://avatar.iran.liara.run/public", // Placeholder d'avatar
+      skills: skills.map(() => Math.floor(Math.random() * 5) + 1),
+    }));
 
-    // Create a hexagonal grid pattern
-    const hexbin = d3.hexbin()
-      .radius(hexRadius)
-      .extent([[0, 0], [width, height]]);
-
-    const points = hexbin.centers();
-
-    // Helper function to filter non-adjacent points
-    function filterNonAdjacentPoints(points, minDistance) {
-      const filteredPoints = [];
-
-      points.forEach(p => {
-        const isFarEnough = filteredPoints.every(fp => {
-          const distance = Math.sqrt(Math.pow(p[0] - fp[0], 2) + Math.pow(p[1] - fp[1], 2));
-          return distance > minDistance;
-        });
-
-        if (isFarEnough) {
-          filteredPoints.push(p);
+    // Initialise le Chart.js avec un radar chart
+    const ctx = document.getElementById("spiderChart").getContext("2d");
+    const spiderChart = new Chart(ctx, {
+      type: "radar",
+      data: {
+        labels: skills,
+        datasets: [{
+          label: "Compétences",
+          data: people[0].skills,
+          backgroundColor: "rgba(0, 234, 255, 0.2)",
+          borderColor: "#00eaff",
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          r: {
+            angleLines: { color: "#00eaff" },
+            grid: { color: "#004f5e" },
+            pointLabels: { color: "#00eaff", font: { size: 26 } }, // Augmentation de la taille des labels
+            ticks: { display: false }
+          }
+        },
+        plugins: {
+          legend: { display: false }
         }
-      });
-
-      return filteredPoints;
-    }
-
-    // Helper function to find points closer to the center
-    function filterPointsTowardsCenter(points) {
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const maxDistance = Math.min(width, height) / 3; // Control how close the points should be from the center
-
-      return points.filter(p => {
-        const distance = Math.sqrt(Math.pow(p[0] - centerX, 2) + Math.pow(p[1] - centerY, 2));
-        return distance < maxDistance;
-      });
-    }
-
-    // First, filter points to be towards the center
-    let centerPoints = filterPointsTowardsCenter(points);
-
-    // Then, filter them again to ensure non-adjacency (keeping some distance between keywords)
-    const nonAdjacentPoints = filterNonAdjacentPoints(centerPoints, hexRadius * 1.75).slice(0, keywords.length);
-
-    const hexagons = svg.append("g")
-      .selectAll("path")
-      .data(points)
-      .enter().append("path")
-      .attr("class", "hexagon")
-      .attr("d", hexbin.hexagon())
-      .attr("transform", d => `translate(${d[0]},${d[1]})`);
-
-    // Place keywords in the center non-adjacent hexagons
-    const textHexes = svg.selectAll(".hex-text")
-      .data(nonAdjacentPoints)
-      .enter()
-      .append("text")
-      .attr("class", "hex-text")
-      .attr("x", d => d[0])
-      .attr("y", d => d[1])
-      .text((d, i) => keywords[i]);
-
-    // GSAP animation for 3D rotation (balancing effect)
-    gsap.to("#hex-grid", {
-      rotationY: -5, // Add 3D rotation
-      rotationX: -5,  // Slight tilt on the X axis
-      transformOrigin: "50% 50%",
-      yoyo: true,
-      repeat: -1,
-      duration: 4,
-      ease: "power1.inOut"
+      }
     });
-    // Function to create electric arc-like path
-    function createArcPath(p1, p2) {
-      const midX = (p1[0] + p2[0]) / 2 + (Math.random() * 50 - 25); // Randomize mid-point for arc effect
-      const midY = (p1[1] + p2[1]) / 2 + (Math.random() * 50 - 25);
-      return `M${p1[0]},${p1[1]} Q${midX},${midY} ${p2[0]},${p2[1]}`;
+
+    // Met à jour le spider chart avec les compétences de la personne survolée
+    function updateChart(person) {
+      spiderChart.data.datasets[0].data = person.skills;
+      spiderChart.update();
+      gsap.fromTo(spiderChart.canvas, { opacity: 0.5 }, { opacity: 1, duration: 0.5 });
     }
 
-    // Avatar hover interaction with distinct hexagons
-    const avatars = document.querySelectorAll('.avatar');
-    avatars.forEach((avatar, index) => {
-      avatar.addEventListener('mouseover', () => {
-        // Remove existing arcs
-        svg.selectAll(".arc-electric").remove();
-
-        // Assign a distinct set of textHexes to highlight per avatar
-        const randomTextHexes = textHexes.filter(() => Math.random() > 0.5);
-
-        const highlightedHexes = [];
-        
-        randomTextHexes.each(function (d) {
-          const hex = d3.select(this);
-          const hexagon = svg.selectAll(".hexagon").filter(h => h[0] === d[0] && h[1] === d[1]);
-          highlightedHexes.push(d);
-
-          hexagon.transition()
-            .duration(300)
-            .style("stroke-width", "6")  // Accentue le contour
-            .style("fill", "#00FFFF");
-
-          hex.transition()
-            .duration(300)
-            .attr("transform", "scale(1.008)")
-            .style("fill", "black");
-        });
-
-        // Draw arcs between highlighted hexes
-        for (let i = 0; i < highlightedHexes.length - 1; i++) {
-          const p1 = highlightedHexes[i];
-          const p2 = highlightedHexes[i + 1];
-
-          svg.append("path")
-            .attr("class", "arc-electric")
-            .attr("d", createArcPath(p1, p2))
-            .attr("stroke", "#00FFEE")
-            .attr("stroke-width", 2)
-            .style("opacity", 0.7)
-            .transition()
-            .duration(3000)
-            .style("opacity", 1);
-        }
-      });
-
-      avatar.addEventListener('mouseout', () => {
-        // Revert hexagon and text to original style
-        textHexes.each(function (d) {
-          const hex = d3.select(this);
-          const hexagon = svg.selectAll(".hexagon").filter(h => h[0] === d[0] && h[1] === d[1]);
-
-          hexagon.transition()
-            .duration(300)
-            .style("stroke-width", "3")  // Retour au contour initial
-            .style("fill", "transparent");
-
-          hex.transition()
-            .duration(300)
-            .attr("transform", "scale(1)")
-            .style("fill", "#00FFFF");
-        });
-
-        // Remove arcs
-        svg.selectAll(".arc-electric").remove();
-      });
+    // Affiche les avatars avec surbrillance au survol et mise à jour du chart
+    const avatarsContainer = document.getElementById("avatarsContainer");
+    people.forEach(person => {
+      const avatarDiv = document.createElement("div");
+      avatarDiv.classList.add("avatar");
+      avatarDiv.innerHTML = `<img src="${person.avatar}" alt="${person.name}">`;
+      
+      avatarDiv.addEventListener("mouseover", () => updateChart(person));
+      
+      avatarsContainer.appendChild(avatarDiv);
     });
   </script>
 </body>
